@@ -25,7 +25,7 @@ public class MainActivity extends Activity {
     private static final String TAG = "MainActivity";
     private TextView txtView;
     private NotificationReceiver nReceiver;
-
+    private static final int RC_BARCODE_CAPTURE = 9001;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -99,6 +99,13 @@ public class MainActivity extends Activity {
             i.putExtra("command","list");
             sendBroadcast(i);
         }
+        else if(v.getId() == R.id.btnLinkDevice){
+            // launch barcode activity.
+            Intent intent = new Intent(this, BarcodeCaptureActivity.class);
+            intent.putExtra(BarcodeCaptureActivity.AutoFocus, true);
+            intent.putExtra(BarcodeCaptureActivity.UseFlash, false);
+            startActivityForResult(intent, RC_BARCODE_CAPTURE);
+        }
 
 
     }
@@ -141,16 +148,15 @@ public class MainActivity extends Activity {
             if (resultCode == CommonStatusCodes.SUCCESS) {
                 if (data != null) {
                     Barcode barcode = data.getParcelableExtra(BarcodeCaptureActivity.BarcodeObject);
-                    statusMessage.setText(R.string.barcode_success);
-                    barcodeValue.setText(barcode.displayValue);
+                    txtView.setText(R.string.barcode_success+", code :"+barcode.displayValue + "\n" + txtView.getText());
                     Log.d(TAG, "Barcode read: " + barcode.displayValue);
                 } else {
-                    statusMessage.setText(R.string.barcode_failure);
+                    txtView.setText(R.string.barcode_failure+ "\n" + txtView.getText());
                     Log.d(TAG, "No barcode captured, intent data is null");
                 }
             } else {
-                statusMessage.setText(String.format(getString(R.string.barcode_error),
-                        CommonStatusCodes.getStatusCodeString(resultCode)));
+                txtView.setText(String.format(getString(R.string.barcode_error),
+                        CommonStatusCodes.getStatusCodeString(resultCode))+ "\n" + txtView.getText());
             }
         }
         else {
