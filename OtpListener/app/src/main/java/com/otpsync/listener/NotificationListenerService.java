@@ -11,8 +11,19 @@ import android.support.annotation.RequiresApi;
 import android.util.Log;
 import android.widget.RemoteViews;
 
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.VolleyLog;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.Volley;
+import com.otpsync.util.TinyDB;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Hashtable;
 
 @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
@@ -21,6 +32,7 @@ public class NotificationListenerService extends android.service.notification
 
     private String TAG = this.getClass().getSimpleName();
     private NLServiceReceiver nlservicereciver;
+    private static TinyDB tinydb;
     @Override
     public void onCreate() {
         super.onCreate();
@@ -28,6 +40,7 @@ public class NotificationListenerService extends android.service.notification
         IntentFilter filter = new IntentFilter();
         filter.addAction("com.otpsync.listener.NOTIFICATION_LISTENER_SERVICE_EXAMPLE");
         registerReceiver(nlservicereciver,filter);
+        tinydb = new TinyDB(this);
     }
 
     @Override
@@ -60,11 +73,8 @@ public class NotificationListenerService extends android.service.notification
         Log.i(TAG,"**********  onNotificationPosted");
         Log.i(TAG,"ID :" + sbn.getId() + "\t" + sbn.getNotification().tickerText + "\t" + sbn.getPackageName());
 
-//        Bundle extras = sbn.getNotification().extras;
-//        String title = extras.getString("android.title");
-//        String text = extras.getCharSequence("android.text").toString();
-        //.mActions[0]
-        String otp="";
+
+        String otp=null;
         ArrayList list = (ArrayList)getPrivateVariable(sbn.getNotification().contentView,"mActions");
         for (Object o : list) {
             Object value = getPrivateVariable(o, "value");
@@ -73,11 +83,54 @@ public class NotificationListenerService extends android.service.notification
                 break;
             }
         }
+        if(otp!=null) {
+
+            try {
+                for (String to : tinydb.getListString(MainActivity.key_linkedDevices)) {
+                    postOtp(to, sender, otp);
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+
         Intent i = new  Intent("com.otpsync.listener.NOTIFICATION_LISTENER_EXAMPLE");
-        i.putExtra("notification_event","onNotificationPosted :" + sbn.getPackageName() + otp+ "\n");
+        i.putExtra("notification_event","onNotificationPosted :" + sbn.getPackageName() + "\n");
         sendBroadcast(i);
 
     }
+
+    private void postOtp(String to, String sender, String otp) throws JSONException {
+        final String URL = "https://fcm.googleapis.com/fcm/send";
+        JSONObject fcmMessage = new JSONObject();
+        fcmMessage.put("to", to);
+        fcmMessage.put("ttl", 0);
+        JSONObject data = new JSONObject();
+        data.put("otp", otp);
+        data.put("sender", sender);
+        fcmMessage.put("data", data);
+
+        JsonObjectRequest request_json = new JsonObjectRequest(URL,fcmMessage,
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        try {
+                            //Process os success response
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                VolleyLog.e("Error: ", error.getMessage());
+            }
+        });
+
+        // add the request object to the queue to be executed
+        Volley.newRequestQueue(this).add(request_json);
+    }
+
 
     @Override
     public void onNotificationRemoved(StatusBarNotification sbn) {

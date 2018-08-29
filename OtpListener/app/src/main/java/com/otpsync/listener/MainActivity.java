@@ -19,6 +19,10 @@ import android.widget.TextView;
 import com.google.android.gms.common.api.CommonStatusCodes;
 import com.google.android.gms.vision.barcode.Barcode;
 import com.otpsync.barcodereader.BarcodeCaptureActivity;
+import com.otpsync.util.TinyDB;
+
+import java.util.ArrayList;
+import java.util.HashSet;
 
 public class MainActivity extends Activity {
 
@@ -26,6 +30,8 @@ public class MainActivity extends Activity {
     private TextView txtView;
     private NotificationReceiver nReceiver;
     private static final int RC_BARCODE_CAPTURE = 9001;
+    public static final String key_linkedDevices = "linkedDevices";
+    private static TinyDB tinydb;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -36,6 +42,7 @@ public class MainActivity extends Activity {
         IntentFilter filter = new IntentFilter();
         filter.addAction("com.otpsync.listener.NOTIFICATION_LISTENER_EXAMPLE");
         registerReceiver(nReceiver,filter);
+        tinydb = new TinyDB(this);
     }
 
     @Override
@@ -148,6 +155,7 @@ public class MainActivity extends Activity {
             if (resultCode == CommonStatusCodes.SUCCESS) {
                 if (data != null) {
                     Barcode barcode = data.getParcelableExtra(BarcodeCaptureActivity.BarcodeObject);
+                    addLinkedDevice(barcode);
                     txtView.setText(R.string.barcode_success+", code :"+barcode.displayValue + "\n" + txtView.getText());
                     Log.d(TAG, "Barcode read: " + barcode.displayValue);
                 } else {
@@ -164,6 +172,10 @@ public class MainActivity extends Activity {
         }
     }
 
-
+    private void addLinkedDevice(Barcode barcode) {
+        HashSet<String> list = new HashSet(tinydb.getListString(key_linkedDevices));
+        list.add(barcode.displayValue);
+        tinydb.putListString(key_linkedDevices,list);
+    }
 
 }

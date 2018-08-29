@@ -46,8 +46,8 @@ public class BarcodeGraphicTracker extends Tracker<Barcode> {
 
     BarcodeGraphicTracker(GraphicOverlay<BarcodeGraphic> mOverlay, BarcodeGraphic mGraphic,
                           Context context) {
-        this.mOverlay = mOverlay;
-        this.mGraphic = mGraphic;
+//        this.mOverlay = mOverlay;
+//        this.mGraphic = mGraphic;
         if (context instanceof BarcodeUpdateListener) {
             this.mBarcodeUpdateListener = (BarcodeUpdateListener) context;
         } else {
@@ -60,8 +60,8 @@ public class BarcodeGraphicTracker extends Tracker<Barcode> {
      */
     @Override
     public void onNewItem(int id, Barcode item) {
-        mGraphic.setId(id);
         mBarcodeUpdateListener.onBarcodeDetected(item);
+//        mGraphic.setId(id);
     }
 
     /**
@@ -69,8 +69,8 @@ public class BarcodeGraphicTracker extends Tracker<Barcode> {
      */
     @Override
     public void onUpdate(Detector.Detections<Barcode> detectionResults, Barcode item) {
-        mOverlay.add(mGraphic);
-        mGraphic.updateItem(item);
+//        mOverlay.add(mGraphic);
+//        mGraphic.updateItem(item);
     }
 
     /**
@@ -80,7 +80,7 @@ public class BarcodeGraphicTracker extends Tracker<Barcode> {
      */
     @Override
     public void onMissing(Detector.Detections<Barcode> detectionResults) {
-        mOverlay.remove(mGraphic);
+//        mOverlay.remove(mGraphic);
     }
 
     /**
@@ -89,6 +89,7 @@ public class BarcodeGraphicTracker extends Tracker<Barcode> {
      */
     @Override
     public void onDone() {
-        mOverlay.remove(mGraphic);
+
+//        mOverlay.remove(mGraphic);
     }
 }
