@@ -58,6 +58,7 @@ public class MainActivity extends Activity {
         tinydb = new TinyDB(this);
         linkedDevices = tinydb.getListObject(key_linkedDevices,LinkedDevice.class);
         listView.setAdapter(listViewAdapter = new MyCustomAdapter(linkedDevices,this));
+        listViewAdapter.notifyDataSetChanged();
     }
 
     @Override
@@ -193,14 +194,6 @@ public class MainActivity extends Activity {
         tinydb.putListObject(key_linkedDevices,list);
         listViewAdapter.notifyDataSetChanged();
     }
-
-    private void removeLinkedDevice(Barcode barcode) {
-        HashSet<String> list = new HashSet(linkedDevices);
-        list.add(barcode.displayValue);
-        tinydb.putListString(key_linkedDevices,list);
-        listViewAdapter.notifyDataSetChanged();
-    }
-
 
     class MyCustomAdapter extends BaseAdapter implements ListAdapter {
         private ArrayList<LinkedDevice> list;
