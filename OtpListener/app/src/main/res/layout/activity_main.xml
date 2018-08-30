@@ -40,6 +40,16 @@
             android:layout_alignLeft="@+id/btnCreateNotify"
             android:layout_alignRight="@+id/btnCreateNotify"/>
 
+    <Button
+        android:id="@+id/btnListNotify"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/btnClearNotify"
+        android:layout_alignRight="@+id/btnClearNotify"
+        android:layout_below="@+id/btnClearNotify"
+        android:onClick="buttonClicked"
+        android:text="List of Notification" />
+
     <ScrollView android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_alignParentBottom="true"
@@ -47,25 +57,25 @@
                 android:layout_below="@+id/btnListNotify"
                 android:layout_alignLeft="@+id/btnListNotify">
 
-        <TextView
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <ListView
+                android:id="@+id/listView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <TextView
+                android:id="@+id/textView"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textAppearance="?android:attr/textAppearanceMedium"
-                android:text="NotificationListenerService Example"
-                android:id="@+id/textView"
-                />
+                android:text="Log"
+                android:textAppearance="@style/TextAppearance.AppCompat.Body1" />
 
-
+        </LinearLayout>
     </ScrollView>
-
-    <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="List of Notification"
-            android:id="@+id/btnListNotify"
-            android:onClick="buttonClicked"
-            android:layout_below="@+id/btnClearNotify"
-            android:layout_alignLeft="@+id/btnClearNotify"
-            android:layout_alignRight="@+id/btnClearNotify"/>
 
 </RelativeLayout>

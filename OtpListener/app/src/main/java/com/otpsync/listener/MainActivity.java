@@ -11,9 +11,16 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+import android.widget.BaseAdapter;
+import android.widget.Button;
+import android.widget.ListAdapter;
+import android.widget.ListView;
 import android.widget.TextView;
 
 import com.google.android.gms.common.api.CommonStatusCodes;
@@ -28,21 +35,29 @@ public class MainActivity extends Activity {
 
     private static final String TAG = "MainActivity";
     private TextView txtView;
+    private ListView listView;
+    private ArrayList<LinkedDevice> linkedDevices;
+    private MyCustomAdapter listViewAdapter;
     private NotificationReceiver nReceiver;
     private static final int RC_BARCODE_CAPTURE = 9001;
     public static final String key_linkedDevices = "linkedDevices";
+    public static final String NOTIFICATION_LISTENER_SERVICE = "com.otpsync.listener.NOTIFICATION_LISTENER_SERVICE";
+    public static final String MAIN_ACTIVITY = "com.otpsync.listener.NOTIFICATION_LISTENER_EXAMPLE";
     private static TinyDB tinydb;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         txtView = (TextView) findViewById(R.id.textView);
+        listView = (ListView) findViewById(R.id.listView);
         initChannels(this);
         nReceiver = new NotificationReceiver();
         IntentFilter filter = new IntentFilter();
-        filter.addAction("com.otpsync.listener.NOTIFICATION_LISTENER_EXAMPLE");
+        filter.addAction(MainActivity.MAIN_ACTIVITY);
         registerReceiver(nReceiver,filter);
         tinydb = new TinyDB(this);
+        linkedDevices = tinydb.getListObject(key_linkedDevices,LinkedDevice.class);
+        listView.setAdapter(listViewAdapter = new MyCustomAdapter(linkedDevices,this));
     }
 
     @Override
@@ -97,12 +112,12 @@ public class MainActivity extends Activity {
             nManager.notify((int)System.currentTimeMillis(),ncomp.build());
         }
         else if(v.getId() == R.id.btnClearNotify){
-            Intent i = new Intent("com.otpsync.listener.NOTIFICATION_LISTENER_SERVICE_EXAMPLE");
+            Intent i = new Intent(MainActivity.NOTIFICATION_LISTENER_SERVICE);
             i.putExtra("command","clearall");
             sendBroadcast(i);
         }
         else if(v.getId() == R.id.btnListNotify){
-            Intent i = new Intent("com.otpsync.listener.NOTIFICATION_LISTENER_SERVICE_EXAMPLE");
+            Intent i = new Intent(MainActivity.NOTIFICATION_LISTENER_SERVICE);
             i.putExtra("command","list");
             sendBroadcast(i);
         }
@@ -173,9 +188,71 @@ public class MainActivity extends Activity {
     }
 
     private void addLinkedDevice(Barcode barcode) {
-        HashSet<String> list = new HashSet(tinydb.getListString(key_linkedDevices));
-        list.add(barcode.displayValue);
-        tinydb.putListString(key_linkedDevices,list);
+        HashSet<LinkedDevice> list = new HashSet(linkedDevices);
+        list.add(new LinkedDevice(barcode.displayValue));
+        tinydb.putListObject(key_linkedDevices,list);
+        listViewAdapter.notifyDataSetChanged();
     }
 
+    private void removeLinkedDevice(Barcode barcode) {
+        HashSet<String> list = new HashSet(linkedDevices);
+        list.add(barcode.displayValue);
+        tinydb.putListString(key_linkedDevices,list);
+        listViewAdapter.notifyDataSetChanged();
+    }
+
+
+    class MyCustomAdapter extends BaseAdapter implements ListAdapter {
+        private ArrayList<LinkedDevice> list;
+        private Context context;
+
+        public MyCustomAdapter(ArrayList<LinkedDevice> list, Context context) {
+            this.list = list;
+            this.context = context;
+        }
+
+        @Override
+        public int getCount() {
+            return list.size();
+        }
+
+        @Override
+        public Object getItem(int pos) {
+            return list.get(pos);
+        }
+
+        @Override
+        public long getItemId(int pos) {
+            return pos;
+            //just return 0 if your list items do not have an Id variable.
+        }
+
+        @Override
+        public View getView(final int position, View convertView, ViewGroup parent) {
+            View view = convertView;
+            if (view == null) {
+                LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+                view = inflater.inflate(R.layout.list_item, null);
+            }
+
+            //Handle TextView and display string from your list
+            TextView tvContact= (TextView)view.findViewById(R.id.deviceName);
+            tvContact.setText(list.get(position).getName());
+
+            //Handle buttons and add onClickListeners
+            Button unlinkBtn= (Button)view.findViewById(R.id.unlink);
+
+            unlinkBtn.setOnClickListener(new View.OnClickListener(){
+                @Override
+                public void onClick(View v) {
+                    //do something
+                    list.remove(v.getId());
+                    notifyDataSetChanged();
+
+                }
+            });
+
+            return view;
+        }
+    }
 }

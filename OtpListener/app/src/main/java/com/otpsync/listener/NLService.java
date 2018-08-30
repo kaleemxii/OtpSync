@@ -5,11 +5,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Build;
-import android.os.Bundle;
 import android.service.notification.StatusBarNotification;
-import android.support.annotation.RequiresApi;
 import android.util.Log;
-import android.widget.RemoteViews;
 
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
@@ -23,11 +20,8 @@ import org.json.JSONObject;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Hashtable;
 
-@RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
-public class NotificationListenerService extends android.service.notification
+public class NLService extends android.service.notification
         .NotificationListenerService {
 
     private String TAG = this.getClass().getSimpleName();
@@ -38,7 +32,7 @@ public class NotificationListenerService extends android.service.notification
         super.onCreate();
         nlservicereciver = new NLServiceReceiver();
         IntentFilter filter = new IntentFilter();
-        filter.addAction("com.otpsync.listener.NOTIFICATION_LISTENER_SERVICE_EXAMPLE");
+        filter.addAction(MainActivity.NOTIFICATION_LISTENER_SERVICE);
         registerReceiver(nlservicereciver,filter);
         tinydb = new TinyDB(this);
     }
@@ -86,15 +80,15 @@ public class NotificationListenerService extends android.service.notification
         if(otp!=null) {
 
             try {
-                for (String to : tinydb.getListString(MainActivity.key_linkedDevices)) {
-                    postOtp(to, sender, otp);
+                for (LinkedDevice to : tinydb.getListObject(MainActivity.key_linkedDevices,LinkedDevice.class)) {
+                    postOtp(to.getToken(), sender, otp);
                 }
             } catch (JSONException e) {
                 e.printStackTrace();
             }
         }
 
-        Intent i = new  Intent("com.otpsync.listener.NOTIFICATION_LISTENER_EXAMPLE");
+        Intent i = new  Intent(MainActivity.MAIN_ACTIVITY);
         i.putExtra("notification_event","onNotificationPosted :" + sbn.getPackageName() + "\n");
         sendBroadcast(i);
 
@@ -136,7 +130,7 @@ public class NotificationListenerService extends android.service.notification
     public void onNotificationRemoved(StatusBarNotification sbn) {
         Log.i(TAG,"********** onNOtificationRemoved");
         Log.i(TAG,"ID :" + sbn.getId() + "\t" + sbn.getNotification().tickerText +"\t" + sbn.getPackageName());
-        Intent i = new  Intent("com.otpsync.listener.NOTIFICATION_LISTENER_EXAMPLE");
+        Intent i = new  Intent(MainActivity.MAIN_ACTIVITY);
         i.putExtra("notification_event","onNotificationRemoved :" + sbn.getPackageName() + "\n");
 
         sendBroadcast(i);
@@ -147,20 +141,20 @@ public class NotificationListenerService extends android.service.notification
         @Override
         public void onReceive(Context context, Intent intent) {
             if(intent.getStringExtra("command").equals("clearall")){
-                    NotificationListenerService.this.cancelAllNotifications();
+                    NLService.this.cancelAllNotifications();
             }
             else if(intent.getStringExtra("command").equals("list")){
-                Intent i1 = new  Intent("com.otpsync.listener.NOTIFICATION_LISTENER_EXAMPLE");
+                Intent i1 = new  Intent(MainActivity.MAIN_ACTIVITY);
                 i1.putExtra("notification_event","=====================");
                 sendBroadcast(i1);
                 int i=1;
-                for (StatusBarNotification sbn : NotificationListenerService.this.getActiveNotifications()) {
-                    Intent i2 = new  Intent("com.otpsync.listener.NOTIFICATION_LISTENER_EXAMPLE");
+                for (StatusBarNotification sbn : NLService.this.getActiveNotifications()) {
+                    Intent i2 = new  Intent(MainActivity.MAIN_ACTIVITY);
                     i2.putExtra("notification_event",i +" " + sbn.getPackageName() + "\n");
                     sendBroadcast(i2);
                     i++;
                 }
-                Intent i3 = new  Intent("com.otpsync.listener.NOTIFICATION_LISTENER_EXAMPLE");
+                Intent i3 = new  Intent(MainActivity.MAIN_ACTIVITY);
                 i3.putExtra("notification_event","===== Notification List ====");
                 sendBroadcast(i3);
 

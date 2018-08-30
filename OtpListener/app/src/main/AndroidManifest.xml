@@ -34,7 +34,7 @@
         <activity android:name="com.otpsync.barcodereader.BarcodeCaptureActivity"
             android:label="@string/read_barcode"
             android:theme="@style/NoActionBar"/>
-        <service android:name="com.otpsync.listener.NotificationListenerService"
+        <service android:name="com.otpsync.listener.NLService"
                  android:label="@string/app_name"
                  android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
             <intent-filter>
